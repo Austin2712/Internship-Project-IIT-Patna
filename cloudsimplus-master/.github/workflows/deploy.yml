@@ -1,0 +1,25 @@
+name: Publish to Maven Central
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Maven Central Repository
+        uses: actions/setup-java@v4
+        with:
+          java-version: '25'
+          distribution: 'adopt'
+          server-id: central
+          # ~/.m2/settings.xml
+          server-username: MAVEN_USERNAME
+          server-password: MAVEN_PASSWORD
+          cache: 'maven'
+      - name: Publish package
+        run: SIGN_KEY="${{ secrets.OSSRH_GPG_SIGN_KEY }}" mvn --no-transfer-progress --batch-mode -Psonatype deploy
+        env:
+          MAVEN_USERNAME: ${{ secrets.OSSRH_USERNAME }}
+          MAVEN_PASSWORD: ${{ secrets.OSSRH_TOKEN }}

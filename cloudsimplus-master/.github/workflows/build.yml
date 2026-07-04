@@ -1,0 +1,27 @@
+name: build
+on:
+  push:
+    branches: [ master, main ]
+  pull_request:
+    branches: [ master, main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    name: Java Build
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'corretto'
+          java-version: 25
+          cache: 'maven'
+      - name: Maven Build
+        run: mvn clean verify -B -V -Pintegration-tests
+      - name: Codacy coverage report upload
+        env:
+          CODACY_PROJECT_TOKEN: ${{ secrets.CODACY_PROJECT_TOKEN }}
+        run: |
+          mvn jacoco:report
+          test -z $CODACY_PROJECT_TOKEN || bash <(curl -Ls https://coverage.codacy.com/get.sh) report -r target/site/jacoco/jacoco.xml
